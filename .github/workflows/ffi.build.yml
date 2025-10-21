@@ -18,7 +18,12 @@ jobs:
       uses: actions-rust-lang/setup-rust-toolchain@v1
       with:
         toolchain: stable
-
+    - name: Install protoc
+      uses: arduino/setup-protoc@v1
+      with:
+        version: '3.20.1'  # 你可以选择需要的版本
+        repo-token: ${{ secrets.GITHUB_TOKEN }}
+      
     - name: Cache dependencies
       uses: actions/cache@v3
       with:
