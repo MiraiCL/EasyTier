@@ -11,25 +11,33 @@ jobs:
     strategy:
       matrix:
         include:
-          # Linux targets
+          # Linux targets - dynamic libraries (.so)
           - target: x86_64-unknown-linux-gnu
             os: ubuntu-latest
+            lib_pattern: "*.so"
           - target: i686-unknown-linux-gnu
             os: ubuntu-latest
+            lib_pattern: "*.so"
           - target: aarch64-unknown-linux-gnu
             os: ubuntu-latest
-          # Windows targets
+            lib_pattern: "*.so"
+          # Windows targets - dynamic libraries (.dll)
           - target: x86_64-pc-windows-msvc
             os: windows-latest
+            lib_pattern: "*.dll"
           - target: i686-pc-windows-msvc
             os: windows-latest
+            lib_pattern: "*.dll"
           - target: aarch64-pc-windows-msvc
             os: windows-latest
-          # macOS targets
+            lib_pattern: "*.dll"
+          # macOS targets - dynamic libraries (.dylib)
           - target: x86_64-apple-darwin
             os: macos-latest
+            lib_pattern: "*.dylib"
           - target: aarch64-apple-darwin
             os: macos-latest
+            lib_pattern: "*.dylib"
 
     runs-on: ${{ matrix.os }}
     
@@ -42,7 +50,6 @@ jobs:
       with:
         toolchain: stable
         target: ${{ matrix.target }}
-        components: rust-src
 
     - name: Install protoc
       uses: arduino/setup-protoc@v1
@@ -77,10 +84,18 @@ jobs:
     - name: Build package
       run: cargo build --package easytier-ffi --release --target ${{ matrix.target }}
 
-    - name: Upload artifacts
+    - name: Find and list dynamic libraries
+      run: |
+        echo "Looking for dynamic libraries in target/${{ matrix.target }}/release/"
+        find target/${{ matrix.target }}/release/ -name "${{ matrix.lib_pattern }}" -type f | while read file; do
+          echo "Found: $file"
+          ls -la "$file"
+        done
+
+    - name: Upload dynamic libraries
       uses: actions/upload-artifact@v4
       with:
         name: easytier-ffi-${{ matrix.target }}
-        path: target/${{ matrix.target }}/release/
+        path: target/${{ matrix.target }}/release/${{ matrix.lib_pattern }}
         retention-days: 7
         if-no-files-found: error
